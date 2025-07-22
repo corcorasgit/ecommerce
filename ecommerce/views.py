@@ -42,7 +42,7 @@ def login_page(request):
         "form": form
     }
     print("User logged in")
-    print(request.user.is_authenticated())
+    #print(request.user.is_authenticated())
     if form.is_valid():
         print(form.cleaned_data)
         username = form.cleaned_data.get("username")
