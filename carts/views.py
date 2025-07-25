@@ -1,12 +1,24 @@
 from django.shortcuts import render
 
-# Create your views here.
+from .models import Cart
+
+def cart_create(user=None):
+    cart_obj = Cart.objects.create(user=None)
+    print("New Cart ID exists")
+    return cart_obj
+
 def cart_home(request):
+    request.session['cart_id'] = "12"
     cart_id = request.session.get("cart_id", None)
-    if cart_id is None:  #and isinstance(cart_id, int):
-        print("Create new cart")
-        request.session['card_id'] = 12 #storing a session variable
-        pass
+    #if cart_id is None:  #and isinstance(cart_id, int):
+    #    cart_obj = cart_create()
+    #    request.session['card_id'] = cart_obj.id
+    #else:
+    qs = Cart.objects.filter(id=cart_id)
+    if qs.count() == 1:
+        print('Cart ID exists')
+        cart_obj = qs.first()
     else:
-        print("Cart ID exists")
+        cart_obj = cart_create()
+        request.session['cart_id'] = cart_obj.id
     return render(request, "carts/home.html", {})
