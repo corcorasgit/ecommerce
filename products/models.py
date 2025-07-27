@@ -1,10 +1,9 @@
-from django.db.models import Q
 import random
 import os
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import pre_save, post_save
 from django.urls import reverse
-
 
 from .utils import unique_slug_generator
 
@@ -31,14 +30,15 @@ class ProductQuerySet(models.query.QuerySet):
 
     def featured(self):
         return self.filter(featured=True, active=True)
-        
+
     def search(self, query):
-        lookups = (Q(title__icontains=query) |
+        lookups = (Q(title__icontains=query) | 
                   Q(description__icontains=query) |
                   Q(price__icontains=query) |
                   Q(tag__title__icontains=query)
                   )
-        return self.filter(lookups).distinct() 
+        # tshirt, t-shirt, t shirt, red, green, blue,
+        return self.filter(lookups).distinct()
 
 class ProductManager(models.Manager):
     def get_queryset(self):
@@ -57,13 +57,7 @@ class ProductManager(models.Manager):
         return None
 
     def search(self, query):
-        lookups = (Q(title__icontains=query) |
-                   Q(description__icontains=query) |
-                   Q(price__icontains=query) |
-                   Q(tag__title__icontains=query)
-                   )
-        return self.get_queryset().active().filter(lookups).distinct()
-
+        return self.get_queryset().active().search(query)
 
 
 class Product(models.Model):
@@ -76,12 +70,10 @@ class Product(models.Model):
     active          = models.BooleanField(default=True)
     timestamp       = models.DateTimeField(auto_now_add=True)
 
-
-
     objects = ProductManager()
 
     def get_absolute_url(self):
-        # return "/products/{slug}/".format(slug=self.slug)
+        #return "/products/{slug}/".format(slug=self.slug)
         return reverse("products:detail", kwargs={"slug": self.slug})
 
     def __str__(self):
@@ -90,12 +82,23 @@ class Product(models.Model):
     def __unicode__(self):
         return self.title
 
+    @property
+    def name(self):
+        return self.title
+
 
 def product_pre_save_receiver(sender, instance, *args, **kwargs):
     if not instance.slug:
         instance.slug = unique_slug_generator(instance)
 
 pre_save.connect(product_pre_save_receiver, sender=Product)
+
+
+
+
+
+
+
 
 
 
